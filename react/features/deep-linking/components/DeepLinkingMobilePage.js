@@ -30,10 +30,8 @@ const _SNS = 'deep-linking-mobile';
  * @type {Array<string>}
  */
 const _URLS = {
-    android: interfaceConfig.MOBILE_DOWNLOAD_LINK_ANDROID
-        || 'https://play.google.com/store/apps/details?id=org.jitsi.meet',
+    android: interfaceConfig.MOBILE_DOWNLOAD_LINK_ANDROID,
     ios: interfaceConfig.MOBILE_DOWNLOAD_LINK_IOS
-        || 'https://itunes.apple.com/us/app/jitsi-meet/id1165103905'
 };
 
 /**
@@ -74,6 +72,7 @@ class DeepLinkingMobilePage extends Component<*, *> {
         super(props);
 
         // Bind event handlers so they are only bound once per instance.
+        this._generateDownloadURL = this._generateDownloadURL.bind(this);
         this._onDownloadApp = this._onDownloadApp.bind(this);
         this._onOpenApp = this._onOpenApp.bind(this);
     }
@@ -137,7 +136,7 @@ class DeepLinkingMobilePage extends Component<*, *> {
                         }
                     </p>
                     <a
-                        href = { _URLS[Platform.OS] }
+                        href = { this._generateDownloadURL() }
                         onClick = { this._onDownloadApp } >
                         <button className = { downloadButtonClassName }>
                             { t(`${_TNS}.downloadApp`) }
@@ -159,6 +158,36 @@ class DeepLinkingMobilePage extends Component<*, *> {
                 <HideNotificationBarStyle />
             </div>
         );
+    }
+
+    _generateDownloadURL: () => string;
+
+    /**
+     * Generates the URL for downloading the app.
+     *
+     * @returns {string} - The URL for downloading the app.
+     */
+    _generateDownloadURL() {
+        const URL = _URLS[Platform.OS];
+
+        if (URL) {
+            return URL;
+        }
+
+        // For information about the properties of
+        // interfaceConfig.MOBILE_DYNAMIC_LINK check:
+        // https://firebase.google.com/docs/dynamic-links/create-manually
+        const {
+            APP_CODE = 'w2atb',
+            APN = 'org.jitsi.meet',
+            IBI = 'com.atlassian.JitsiMeet.ios',
+            ISI = '1165103905'
+        } = interfaceConfig.MOBILE_DYNAMIC_LINK || {};
+        const IUS = interfaceConfig.APP_SCHEME || 'org.jitsi.meet';
+
+        return `https://${APP_CODE}.app.goo.gl/?link=${
+            encodeURIComponent(window.location.href)}&apn=${APN}&ibi=${
+            IBI}&isi=${ISI}&ius=${IUS}&efr=1`;
     }
 
     _onDownloadApp: () => {};
